@@ -33,15 +33,15 @@ export default function Settings() {
 
   const handleAddOption = (key: string) => {
     const newOption = prompt('Nhập tên tùy chọn mới:');
-    if (newOption && !settings[key].includes(newOption)) {
-      const updatedValue = [...settings[key], newOption];
+    if (newOption && !(settings[key] || []).includes(newOption)) {
+      const updatedValue = [...(settings[key] || []), newOption];
       updateSetting(key, updatedValue);
     }
   };
 
   const handleRemoveOption = (key: string, index: number) => {
     if (window.confirm('Bạn có chắc chắn muốn xoá tùy chọn này?')) {
-      const updatedValue = settings[key].filter((_: any, i: number) => i !== index);
+      const updatedValue = (settings[key] || []).filter((_: any, i: number) => i !== index);
       updateSetting(key, updatedValue);
     }
   };
@@ -120,7 +120,7 @@ export default function Settings() {
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 min-h-[120px]">
                 <div className="flex flex-wrap gap-2">
                   <AnimatePresence>
-                    {settings[group.key].map((option: string, index: number) => (
+                    {(settings[group.key] || []).map((option: string, index: number) => (
                       <motion.div
                         key={option}
                         initial={{ opacity: 0, scale: 0.9 }}

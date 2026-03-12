@@ -211,7 +211,7 @@ export default function LogForm({ editingReport, onSuccess }: LogFormProps) {
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                 >
                   <option value="">Chọn Festival</option>
-                  {options.festivals.map((f: string) => <option key={f} value={f}>{f}</option>)}
+                  {(options.festivals || []).map((f: string) => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
             )}
@@ -224,7 +224,7 @@ export default function LogForm({ editingReport, onSuccess }: LogFormProps) {
                 onChange={e => setFormData({...formData, area: e.target.value as AreaType})}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               >
-                {options.areas.map((a: string) => <option key={a} value={a}>{a}</option>)}
+                {(options.areas || []).map((a: string) => <option key={a} value={a}>{a}</option>)}
               </select>
             </div>
             <div className="space-y-2">
@@ -236,7 +236,7 @@ export default function LogForm({ editingReport, onSuccess }: LogFormProps) {
                 onChange={e => setFormData({...formData, stage: e.target.value as StageType})}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               >
-                {options.stages.map((s: string) => <option key={s} value={s}>{s}</option>)}
+                {(options.stages || []).map((s: string) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
           </div>
@@ -258,7 +258,7 @@ export default function LogForm({ editingReport, onSuccess }: LogFormProps) {
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                 >
                   <option value="">Chọn loại sản phẩm</option>
-                  {options.products.map((p: string) => <option key={p} value={p}>{p}</option>)}
+                  {(options.products || []).map((p: string) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
@@ -282,7 +282,7 @@ export default function LogForm({ editingReport, onSuccess }: LogFormProps) {
                   onChange={e => setFormData({...formData, status: e.target.value})}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                 >
-                  {options.productStatuses.map((s: string) => <option key={s} value={s}>{s}</option>)}
+                  {(options.productStatuses || []).map((s: string) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
             </motion.div>
@@ -309,7 +309,7 @@ export default function LogForm({ editingReport, onSuccess }: LogFormProps) {
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-600">Trạng thái công việc</label>
                 <div className="flex flex-wrap gap-3">
-                  {options.workStatuses.map((s: string) => (
+                  {(options.workStatuses || []).map((s: string) => (
                     <button
                       key={s}
                       type="button"
