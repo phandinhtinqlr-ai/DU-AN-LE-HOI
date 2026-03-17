@@ -25,7 +25,7 @@ import { api } from '../services/api';
 
 interface MaintenanceReportTableProps {
   onEdit: (report: Report) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 export default function MaintenanceReportTable({ onEdit, onDelete }: MaintenanceReportTableProps) {
@@ -58,16 +58,6 @@ export default function MaintenanceReportTable({ onEdit, onDelete }: Maintenance
 
   useEffect(() => {
     fetchReports();
-
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}`);
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'NEW_REPORT' || data.type === 'UPDATE_REPORT' || data.type === 'DELETE_REPORT') {
-        fetchReports();
-      }
-    };
-    return () => ws.close();
   }, []);
 
   const filteredReports = reports.filter(report => {
@@ -83,7 +73,7 @@ export default function MaintenanceReportTable({ onEdit, onDelete }: Maintenance
     return matchesSearch && matchesDate && matchesArea && matchesLandZone && matchesType && matchesStatus && matchesTeam;
   });
 
-  const handleDelete = async (e: React.MouseEvent, id: number) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (window.confirm('Bạn có chắc chắn muốn xóa báo cáo này?')) {
       try {

@@ -19,38 +19,47 @@ import { api } from '../services/api';
 import { format } from 'date-fns';
 
 interface HRTableProps {
+  employees: Employee[];
   onEdit: (employee: Employee) => void;
   onView: (employee: Employee) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
+  initialFilters?: {
+    type?: string;
+    gender?: string;
+    status?: string;
+    team?: string;
+  };
 }
 
-export default function HRTable({ onEdit, onView, onDelete }: HRTableProps) {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function HRTable({ employees, onEdit, onView, onDelete, initialFilters }: HRTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    type: '',
-    gender: '',
-    status: '',
-    team: ''
+    type: initialFilters?.type || '',
+    gender: initialFilters?.gender || '',
+    status: initialFilters?.status || '',
+    team: initialFilters?.team || ''
   });
-  const [options, setOptions] = useState<any>(null);
-
-  const fetchEmployees = async () => {
-    try {
-      const data = await api.getEmployees();
-      setEmployees(data);
-      const settings = await api.getSettings();
-      setOptions(settings);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchEmployees();
+    setFilters({
+      type: initialFilters?.type || '',
+      gender: initialFilters?.gender || '',
+      status: initialFilters?.status || '',
+      team: initialFilters?.team || ''
+    });
+  }, [initialFilters]);
+  const [options, setOptions] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const settings = await api.getSettings();
+        setOptions(settings);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchSettings();
   }, []);
 
   const calculateTenure = (joinDate: string) => {
@@ -78,7 +87,7 @@ export default function HRTable({ onEdit, onView, onDelete }: HRTableProps) {
     return matchesSearch && matchesType && matchesGender && matchesStatus && matchesTeam;
   });
 
-  if (loading) return <div className="text-center py-12">Đang tải danh sách nhân sự...</div>;
+  if (!options) return <div className="text-center py-12">Đang tải dữ liệu...</div>;
 
   return (
     <div className="space-y-6">

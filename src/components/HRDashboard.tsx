@@ -24,11 +24,12 @@ import { format } from 'date-fns';
 interface HRDashboardProps {
   employees: Employee[];
   stats: HRStats;
+  onNavigate: (tab: string, filters?: any) => void;
 }
 
 const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
-export default function HRDashboard({ employees, stats }: HRDashboardProps) {
+export default function HRDashboard({ employees, stats, onNavigate }: HRDashboardProps) {
   // Data for Charts
   const typeData = [
     { name: 'Nhân viên', value: stats.totalEmployees },
@@ -75,12 +76,12 @@ export default function HRDashboard({ employees, stats }: HRDashboardProps) {
   ];
 
   const kpis = [
-    { label: 'Tổng số nhân sự', value: stats.totalPersonnel, icon: Users, color: 'text-blue-600', bg: 'bg-blue-100' },
-    { label: 'Tổng số nhân viên', value: stats.totalEmployees, icon: UserCheck, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-    { label: 'Tổng số công nhật', value: stats.totalDailyWorkers, icon: UserPlus, color: 'text-sky-600', bg: 'bg-sky-100' },
-    { label: 'Đang làm việc', value: stats.working, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-    { label: 'Tạm nghỉ', value: stats.onLeave, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' },
-    { label: 'Nghỉ việc', value: stats.resigned, icon: UserMinus, color: 'text-red-600', bg: 'bg-red-100' },
+    { label: 'Tổng số nhân sự', value: stats.totalPersonnel, icon: Users, color: 'text-blue-600', bg: 'bg-blue-100', filter: {} },
+    { label: 'Tổng số nhân viên', value: stats.totalEmployees, icon: UserCheck, color: 'text-indigo-600', bg: 'bg-indigo-100', filter: { type: 'Nhân viên' } },
+    { label: 'Tổng số công nhật', value: stats.totalDailyWorkers, icon: UserPlus, color: 'text-sky-600', bg: 'bg-sky-100', filter: { type: 'Công nhật' } },
+    { label: 'Đang làm việc', value: stats.working, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-100', filter: { status: 'Đang làm việc' } },
+    { label: 'Tạm nghỉ', value: stats.onLeave, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', filter: { status: 'Tạm nghỉ' } },
+    { label: 'Nghỉ việc', value: stats.resigned, icon: UserMinus, color: 'text-red-600', bg: 'bg-red-100', filter: { status: 'Nghỉ việc' } },
   ];
 
   const getBirthdays = () => {
@@ -209,7 +210,8 @@ export default function HRDashboard({ employees, stats }: HRDashboardProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100"
+            className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => onNavigate('reports', kpi.filter)}
           >
             <div className={`w-12 h-12 ${kpi.bg} ${kpi.color} rounded-2xl flex items-center justify-center mb-4`}>
               <kpi.icon size={24} />
@@ -223,7 +225,7 @@ export default function HRDashboard({ employees, stats }: HRDashboardProps) {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Employee Type Donut */}
-        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports')}>
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
               <PieChartIcon size={20} />
@@ -254,7 +256,7 @@ export default function HRDashboard({ employees, stats }: HRDashboardProps) {
         </div>
 
         {/* Gender Pie */}
-        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports')}>
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
               <PieChartIcon size={20} />
@@ -284,7 +286,7 @@ export default function HRDashboard({ employees, stats }: HRDashboardProps) {
         </div>
 
         {/* Team Bar Chart */}
-        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports')}>
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
               <BarChartIcon size={20} />
@@ -305,7 +307,7 @@ export default function HRDashboard({ employees, stats }: HRDashboardProps) {
         </div>
 
         {/* Work Status Bar Chart */}
-        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports')}>
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
               <BarChartIcon size={20} />
@@ -326,7 +328,7 @@ export default function HRDashboard({ employees, stats }: HRDashboardProps) {
         </div>
 
         {/* Tenure Bar Chart */}
-        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 lg:col-span-2">
+        <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100 lg:col-span-2 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports')}>
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center">
               <BarChartIcon size={20} />

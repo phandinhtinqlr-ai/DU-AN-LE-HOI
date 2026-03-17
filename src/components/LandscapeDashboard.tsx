@@ -14,7 +14,11 @@ import { DashboardStats, Report } from '../types';
 
 const LANDSCAPE_COLORS = ['#2E7D32', '#4CAF50', '#81C784', '#A5D6A7', '#C8E6C9'];
 
-export default function LandscapeDashboard() {
+interface LandscapeDashboardProps {
+  onNavigate: (tab: string, filters?: any) => void;
+}
+
+export default function LandscapeDashboard({ onNavigate }: LandscapeDashboardProps) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [settings, setSettings] = useState<any>(null);
@@ -54,7 +58,7 @@ export default function LandscapeDashboard() {
 
   if (loading || !settings) return <div className="flex items-center justify-center h-64">Đang tải dữ liệu...</div>;
 
-  const landscapeReports = reports.filter(r => r.module === 'Cảnh quan');
+  const landscapeReports = reports.filter(r => r.module === 'Thi công cây hoa');
 
   const treeSourceData = [
     { name: 'Cây mua ngoài', value: landscapeReports.filter(r => r.treeSource === 'Cây mua ngoài').reduce((acc, r) => acc + (r.treeQuantity || 0), 0) },
@@ -93,12 +97,12 @@ export default function LandscapeDashboard() {
         <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
           <Sprout size={24} />
         </div>
-        <h2 className="text-2xl font-bold text-slate-800">Dashboard Cảnh quan</h2>
+        <h2 className="text-2xl font-bold text-slate-800">Dashboard Thi công cây hoa</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {landscapeStatCards.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
+          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Thi công cây hoa' })}>
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${stat.color}`}>
               <stat.icon size={24} />
             </div>
@@ -112,7 +116,7 @@ export default function LandscapeDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Tree by Source */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Thi công cây hoa' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Biểu đồ cây theo nguồn</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -128,7 +132,7 @@ export default function LandscapeDashboard() {
         </div>
 
         {/* Tree by Classification */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Thi công cây hoa' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Biểu đồ theo phân loại cây</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -144,7 +148,7 @@ export default function LandscapeDashboard() {
         </div>
 
         {/* By 4 Land Zones */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Thi công cây hoa' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Biểu đồ theo 4 vùng đất</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -160,7 +164,7 @@ export default function LandscapeDashboard() {
         </div>
 
         {/* Man Days by Area */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Thi công cây hoa' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Biểu đồ số công theo khu vực</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">

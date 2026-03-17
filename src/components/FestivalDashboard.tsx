@@ -14,7 +14,11 @@ import { DashboardStats, Report } from '../types';
 
 const COLORS = ['#0F4C81', '#F2A900', '#10B981', '#F43F5E', '#8B5CF6'];
 
-export default function FestivalDashboard() {
+interface FestivalDashboardProps {
+  onNavigate: (tab: string, filters?: any) => void;
+}
+
+export default function FestivalDashboard({ onNavigate }: FestivalDashboardProps) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [settings, setSettings] = useState<any>(null);
@@ -84,7 +88,7 @@ export default function FestivalDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
+          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Lễ hội' })}>
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${stat.color}`}>
               <stat.icon size={24} />
             </div>
@@ -97,7 +101,7 @@ export default function FestivalDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Lễ hội' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Tiến độ theo Khu vực</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -112,7 +116,7 @@ export default function FestivalDashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Lễ hội' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Tiến độ theo Festival</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">

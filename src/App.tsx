@@ -13,7 +13,8 @@ import {
   Sprout,
   Droplets,
   ChevronDown,
-  Users
+  Users,
+  Network
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import FestivalDashboard from './components/FestivalDashboard';
@@ -27,10 +28,13 @@ import ReportTable from './components/ReportTable';
 import MaintenanceReportTable from './components/MaintenanceReportTable';
 import HRTable from './components/HRTable';
 import HRDetail from './components/HRDetail';
+import OrgChart from './components/OrgChart';
+import SystemLog from './components/SystemLog';
 import SettingsView from './components/Settings';
 import Toast, { ToastType } from './components/Toast';
-import { Report, ModuleType, Employee } from './types';
+import { Report, ModuleType, Employee, Log } from './types';
 import { api } from './services/api';
+import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, User, db, collection, onSnapshot, query, orderBy, limit } from './firebase';
 
 interface ToastMessage {
   id: string | number;
@@ -39,17 +43,99 @@ interface ToastMessage {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'form' | 'reports' | 'settings'>('dashboard');
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'form' | 'reports' | 'settings' | 'org-chart' | 'logs'>('dashboard');
   const [activeModule, setActiveModule] = useState<ModuleType>('Nhân sự');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [notifications, setNotifications] = useState<string[]>([]);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [editingReport, setEditingReport] = useState<Report | null>(null);
+  const [reportFilters, setReportFilters] = useState<any>(null);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [viewingEmployee, setViewingEmployee] = useState<Employee | null>(null);
   const [isModuleMenuOpen, setIsModuleMenuOpen] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [hrStats, setHrStats] = useState<any>(null);
+  const [logs, setLogs] = useState<Log[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsAuthReady(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      addToast('Đăng nhập thành công!', 'success');
+    } catch (error) {
+      console.error(error);
+      addToast('Đăng nhập thất bại', 'error');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      addToast('Đã đăng xuất', 'info');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchStats = useCallback(async () => {
+    if (user) {
+      try {
+        const statsData = await api.getStats();
+        setHrStats(statsData.hr);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Real-time employees
+    const qEmp = query(collection(db, 'employees'), orderBy('createdAt', 'desc'));
+    const unsubEmp = onSnapshot(qEmp, (snapshot) => {
+      const empData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+      setEmployees(empData);
+      fetchStats();
+    }, (error) => {
+      console.error("Employee listener error:", error);
+    });
+
+    // Real-time reports for notifications
+    const qRep = query(collection(db, 'reports'), orderBy('createdAt', 'desc'), limit(1));
+    const unsubRep = onSnapshot(qRep, (snapshot) => {
+      if (!snapshot.empty && !snapshot.metadata.hasPendingWrites) {
+        const report = snapshot.docs[0].data() as Report;
+        // Only notify for new reports (simple check)
+        const msg = `Báo cáo mới từ ${report.reporter} - ${report.area}`;
+        setNotifications(prev => [msg, ...prev].slice(0, 10));
+        fetchStats();
+      }
+    });
+
+    // Real-time logs
+    const unsubLogs = onSnapshot(collection(db, 'logs'), (snapshot) => {
+      const logsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Log));
+      setLogs(logsData.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+    }, (error) => {
+      console.error("Logs listener error:", error);
+    });
+
+    return () => {
+      unsubEmp();
+      unsubRep();
+      unsubLogs();
+    };
+  }, [user, fetchStats]);
 
   const addToast = useCallback((message: string, type: ToastType = 'info') => {
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -59,82 +145,6 @@ export default function App() {
   const removeToast = useCallback((id: string | number) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
-
-  const fetchHRData = useCallback(async () => {
-    if (activeModule === 'Nhân sự') {
-      try {
-        const [empData, statsData] = await Promise.all([
-          api.getEmployees(),
-          api.getStats()
-        ]);
-        setEmployees(empData);
-        setHrStats(statsData.hr);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }, [activeModule]);
-
-  useEffect(() => {
-    fetchHRData();
-  }, [fetchHRData]);
-
-  useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
-    let ws: WebSocket | null = null;
-
-    const connectWS = () => {
-      try {
-        ws = new WebSocket(wsUrl);
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            let msg = '';
-            if (data.type === 'NEW_REPORT') {
-              msg = `Báo cáo mới từ ${data.payload.reporter} - ${data.payload.area}`;
-              addToast(msg, 'success');
-            } else if (data.type === 'UPDATE_REPORT') {
-              msg = `Cập nhật báo cáo từ ${data.payload.reporter} - ${data.payload.area}`;
-              addToast(msg, 'info');
-            } else if (data.type === 'NEW_EMPLOYEE') {
-              msg = `Hồ sơ nhân sự mới: ${data.payload.fullName}`;
-              addToast(msg, 'success');
-              fetchHRData();
-            } else if (data.type === 'UPDATE_EMPLOYEE') {
-              msg = `Cập nhật hồ sơ: ${data.payload.fullName}`;
-              addToast(msg, 'info');
-              fetchHRData();
-            } else if (data.type === 'SETTINGS_UPDATE') {
-              msg = `Cấu hình hệ thống (${data.key}) vừa được thay đổi`;
-              addToast(msg, 'info');
-            } else if (data.type === 'STATS_UPDATE') {
-              fetchHRData();
-            }
-            if (msg) {
-              setNotifications(prev => [msg, ...prev].slice(0, 10));
-            }
-          } catch (e) {
-            console.error("Failed to parse WebSocket message:", e);
-          }
-        };
-        ws.onclose = () => {
-          setTimeout(connectWS, 3000); // Auto reconnect
-        };
-        ws.onerror = (error) => {
-          console.warn("WebSocket connection issue.");
-        };
-      } catch (e) {
-        console.error("WebSocket initialization failed:", e);
-      }
-    };
-
-    connectWS();
-
-    return () => {
-      if (ws) ws.close();
-    };
-  }, [addToast, fetchHRData]);
 
   const handleEdit = (report: Report) => {
     setEditingReport(report);
@@ -146,12 +156,12 @@ export default function App() {
     setActiveTab('form');
   };
 
-  const handleDeleteEmployee = async (id: number) => {
+  const handleDeleteEmployee = async (id: string) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa hồ sơ này?')) {
       try {
         await api.deleteEmployee(id);
+        await api.logAction('Xóa nhân sự', 'Nhân sự', user?.email || 'Unknown', `ID: ${id}`);
         addToast('Đã xóa hồ sơ nhân sự', 'success');
-        fetchHRData();
         setViewingEmployee(null);
       } catch (error) {
         addToast('Lỗi khi xóa hồ sơ', 'error');
@@ -171,14 +181,16 @@ export default function App() {
       label: activeModule === 'Nhân sự' ? 'Danh Sách Nhân Sự' : 'Quản Lý Báo Cáo', 
       icon: activeModule === 'Nhân sự' ? Users : FileText 
     },
+    ...(activeModule === 'Nhân sự' ? [{ id: 'org-chart', label: 'Sơ đồ tổ chức', icon: Network }] : []),
     { id: 'settings', label: 'Cấu Hình', icon: SettingsIcon },
+    { id: 'logs', label: 'Lịch sử thao tác', icon: Activity },
   ];
 
   const getModuleColor = (module: ModuleType) => {
     switch(module) {
       case 'Nhân sự': return 'bg-blue-600';
       case 'Lễ hội': return 'bg-blue-500';
-      case 'Cảnh quan': return 'bg-emerald-500';
+      case 'Thi công cây hoa': return 'bg-emerald-500';
       case 'Bảo dưỡng': return 'bg-green-600';
       default: return 'bg-primary';
     }
@@ -188,11 +200,51 @@ export default function App() {
     switch(module) {
       case 'Nhân sự': return <Users size={18} />;
       case 'Lễ hội': return <Activity size={18} />;
-      case 'Cảnh quan': return <Sprout size={18} />;
+      case 'Thi công cây hoa': return <Sprout size={18} />;
       case 'Bảo dưỡng': return <Droplets size={18} />;
       default: return <Activity size={18} />;
     }
   };
+
+  if (!isAuthReady) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-500 font-bold">Đang khởi tạo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-[40px] shadow-2xl border border-slate-100 p-10 text-center space-y-8">
+          <div className="w-20 h-20 bg-blue-600 text-white rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-blue-200">
+            <Users size={40} />
+          </div>
+          
+          <div className="space-y-2">
+            <h1 className="text-3xl font-black text-slate-800">PHÒNG CẢNH QUAN</h1>
+            <p className="text-slate-500 font-medium">Hệ thống quản lý nội bộ Ba Na Hills</p>
+          </div>
+
+          <button
+            onClick={handleLogin}
+            className="w-full py-4 bg-white border-2 border-slate-100 text-slate-700 rounded-2xl font-bold hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm"
+          >
+            <img src="https://www.google.com/favicon.ico" alt="" className="w-5 h-5" />
+            Đăng nhập với Google
+          </button>
+
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+            Vui lòng sử dụng email công ty để truy cập
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex h-screen overflow-hidden ${activeModule === 'Nhân sự' ? 'bg-bg-app' : 'bg-bg-app'}`}>
@@ -207,13 +259,14 @@ export default function App() {
             <span className={`font-bold ${activeModule === 'Nhân sự' ? 'text-primary' : 'text-primary'}`}>SW</span>
           </div>
           {isSidebarOpen && (
-            <motion.span 
+            <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="font-bold text-sm tracking-tight"
+              className="flex flex-col"
             >
-              BA NA HILLS
-            </motion.span>
+              <span className="font-black text-sm tracking-tighter leading-none">PHÒNG CẢNH QUAN</span>
+              <span className="text-[10px] font-bold opacity-60">Ba Na Hills</span>
+            </motion.div>
           )}
         </div>
 
@@ -235,7 +288,7 @@ export default function App() {
                     <p className="text-sm font-bold truncate">
                       {activeModule === 'Nhân sự' ? 'Hồ Sơ Nhân Sự' :
                        activeModule === 'Lễ hội' ? 'Thi Công Lễ Hội' : 
-                       activeModule === 'Cảnh quan' ? 'Thi Công Cảnh Quan' : 'Chăm Sóc – Bảo Dưỡng'}
+                       activeModule === 'Thi công cây hoa' ? 'Thi Công Cây Hoa' : 'Chăm Sóc – Bảo Dưỡng'}
                     </p>
                   </div>
                 )}
@@ -253,7 +306,7 @@ export default function App() {
                     {[
                       { id: 'Nhân sự', label: 'Hồ Sơ Nhân Sự', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
                       { id: 'Lễ hội', label: 'Thi Công Lễ Hội', icon: Activity, color: 'text-blue-600', bg: 'bg-blue-50' },
-                      { id: 'Cảnh quan', label: 'Thi Công Cảnh Quan', icon: Sprout, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                      { id: 'Thi công cây hoa', label: 'Thi Công Cây Hoa', icon: Sprout, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                       { id: 'Bảo dưỡng', label: 'Chăm Sóc – Bảo Dưỡng', icon: Droplets, color: 'text-green-600', bg: 'bg-green-50' }
                     ].map(mod => (
                       <button 
@@ -322,7 +375,7 @@ export default function App() {
             <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
               activeModule === 'Nhân sự' ? 'bg-blue-100 text-blue-600' :
               activeModule === 'Lễ hội' ? 'bg-blue-100 text-blue-600' : 
-              activeModule === 'Cảnh quan' ? 'bg-emerald-100 text-emerald-600' : 'bg-green-100 text-green-600'
+              activeModule === 'Thi công cây hoa' ? 'bg-emerald-100 text-emerald-600' : 'bg-green-100 text-green-600'
             }`}>
               {activeModule === 'Bảo dưỡng' ? 'Chăm Sóc – Bảo Dưỡng' : 
                activeModule === 'Nhân sự' ? 'Hồ Sơ Nhân Sự' : activeModule}
@@ -358,19 +411,26 @@ export default function App() {
 
             <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-slate-800">Admin Team</p>
+                <p className="text-sm font-bold text-slate-800">{user?.displayName || 'Admin Team'}</p>
                 <p className="text-xs text-slate-500">
                   {activeModule === 'Nhân sự' ? 'Quản Lý Nhân Sự' :
-                   activeModule === 'Lễ hội' ? 'Thi Công Lễ Hội' : 'Thi Công Cảnh Quan'}
+                   activeModule === 'Lễ hội' ? 'Thi Công Lễ Hội' : 'Thi Công Cây Hoa'}
                 </p>
               </div>
-              <div className={`w-10 h-10 ${
-                activeModule === 'Nhân sự' ? 'bg-primary' :
-                activeModule === 'Lễ hội' ? 'bg-primary' : 
-                activeModule === 'Cảnh quan' ? 'bg-emerald-600' : 'bg-green-600'
-              } rounded-full flex items-center justify-center text-white font-bold`}>
-                A
-              </div>
+              <button 
+                onClick={handleLogout}
+                className={`w-10 h-10 ${
+                  activeModule === 'Nhân sự' ? 'bg-primary' :
+                  activeModule === 'Lễ hội' ? 'bg-primary' : 
+                  activeModule === 'Thi công cây hoa' ? 'bg-emerald-600' : 'bg-green-600'
+                } rounded-full flex items-center justify-center text-white font-bold hover:opacity-80 transition-all`}
+              >
+                {user?.photoURL ? (
+                  <img src={user.photoURL} alt="" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  user?.displayName?.charAt(0) || 'A'
+                )}
+              </button>
             </div>
           </div>
         </header>
@@ -386,19 +446,23 @@ export default function App() {
               transition={{ duration: 0.2 }}
             >
               {activeTab === 'dashboard' && (
-                activeModule === 'Nhân sự' ? <HRDashboard employees={employees} stats={hrStats || {}} /> :
-                activeModule === 'Lễ hội' ? <FestivalDashboard /> : 
-                activeModule === 'Cảnh quan' ? <LandscapeDashboard /> : <MaintenanceDashboard />
+                activeModule === 'Nhân sự' ? <HRDashboard employees={employees} stats={hrStats || {}} onNavigate={(tab, filters) => { setActiveTab(tab as any); setReportFilters(filters); }} /> :
+                activeModule === 'Lễ hội' ? <FestivalDashboard onNavigate={(tab, filters) => { setActiveTab(tab as any); setReportFilters(filters); }} /> : 
+                activeModule === 'Thi công cây hoa' ? <LandscapeDashboard onNavigate={(tab, filters) => { setActiveTab(tab as any); setReportFilters(filters); }} /> : 
+                <MaintenanceDashboard onNavigate={(tab, filters) => { setActiveTab(tab as any); setReportFilters(filters); }} />
+              )}
+              {activeTab === 'org-chart' && activeModule === 'Nhân sự' && (
+                <OrgChart employees={employees} />
               )}
               {activeTab === 'form' && (
                 activeModule === 'Nhân sự' ? (
                   <HRForm 
                     editingEmployee={editingEmployee}
-                    onSuccess={() => {
+                    onSuccess={async () => {
+                      await api.logAction(editingEmployee ? 'Cập nhật nhân sự' : 'Thêm nhân sự', 'Nhân sự', user?.email || 'Unknown', editingEmployee?.fullName || '');
                       addToast(editingEmployee ? 'Cập nhật hồ sơ thành công!' : 'Lưu hồ sơ thành công!', 'success');
                       setActiveTab('reports');
                       setEditingEmployee(null);
-                      fetchHRData();
                     }}
                     onError={(err) => addToast(err, 'error')}
                   />
@@ -428,9 +492,11 @@ export default function App() {
               {activeTab === 'reports' && (
                 activeModule === 'Nhân sự' ? (
                   <HRTable 
+                    employees={employees}
                     onEdit={handleEditEmployee}
                     onView={setViewingEmployee}
                     onDelete={handleDeleteEmployee}
+                    initialFilters={reportFilters}
                   />
                 ) : activeModule === 'Bảo dưỡng' ? (
                   <MaintenanceReportTable 
@@ -438,8 +504,11 @@ export default function App() {
                     onDelete={(id) => addToast('Đã xóa báo cáo', 'info')}
                   />
                 ) : (
-                  <ReportTable onEdit={handleEdit} activeModule={activeModule} />
+                  <ReportTable onEdit={handleEdit} activeModule={activeModule} initialFilters={reportFilters} />
                 )
+              )}
+              {activeTab === 'logs' && (
+                <SystemLog logs={logs} />
               )}
               {activeTab === 'settings' && <SettingsView onToast={(msg, type) => addToast(msg, type)} activeModule={activeModule} />}
             </motion.div>

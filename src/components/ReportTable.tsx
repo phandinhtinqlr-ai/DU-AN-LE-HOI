@@ -37,9 +37,16 @@ import { api } from '../services/api';
 interface ReportTableProps {
   onEdit: (report: Report) => void;
   activeModule: ModuleType;
+  initialFilters?: {
+    searchTerm?: string;
+    filterArea?: string;
+    filterFestival?: string;
+    filterType?: string;
+    filterModule?: string;
+  };
 }
 
-export default function ReportTable({ onEdit, activeModule }: ReportTableProps) {
+export default function ReportTable({ onEdit, activeModule, initialFilters }: ReportTableProps) {
   const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,16 +54,21 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
   const [settings, setSettings] = useState<any>(null);
   
   // Filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterArea, setFilterArea] = useState<string>('');
-  const [filterFestival, setFilterFestival] = useState<string>('');
-  const [filterType, setFilterType] = useState<string>('');
-  const [filterModule, setFilterModule] = useState<string>(activeModule);
+  const [searchTerm, setSearchTerm] = useState(initialFilters?.searchTerm || '');
+  const [filterArea, setFilterArea] = useState<string>(initialFilters?.filterArea || '');
+  const [filterFestival, setFilterFestival] = useState<string>(initialFilters?.filterFestival || '');
+  const [filterType, setFilterType] = useState<string>(initialFilters?.filterType || '');
+  const [filterModule, setFilterModule] = useState<string>(initialFilters?.filterModule || activeModule);
 
-  // Update filterModule when activeModule changes
   useEffect(() => {
-    setFilterModule(activeModule);
-  }, [activeModule]);
+    if (initialFilters) {
+      setSearchTerm(initialFilters.searchTerm || '');
+      setFilterArea(initialFilters.filterArea || '');
+      setFilterFestival(initialFilters.filterFestival || '');
+      setFilterType(initialFilters.filterType || '');
+      setFilterModule(initialFilters.filterModule || activeModule);
+    }
+  }, [initialFilters, activeModule]);
 
   useEffect(() => {
     fetchData();
@@ -98,7 +110,7 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
     setFilteredReports(result);
   }, [searchTerm, filterArea, filterFestival, filterType, filterModule, reports]);
 
-  const handleDelete = async (e: React.MouseEvent, id: number) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (window.confirm('Bạn có chắc chắn muốn xoá báo cáo này?')) {
       try {
@@ -123,10 +135,10 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
       'Loại CV': r.workType || '-',
       'Festival': r.festival || '-',
       'Khu vực': r.area,
-      'Công đoạn/Vị trí': r.module === 'Cảnh quan' ? r.location : r.stage,
-      'Sản phẩm/Cây': r.module === 'Cảnh quan' ? r.treeType : (r.productType || '-'),
-      'Số lượng': r.module === 'Cảnh quan' ? r.treeQuantity : (r.quantity || '-'),
-      'Số công': r.module === 'Cảnh quan' ? r.manDays : '-',
+      'Công đoạn/Vị trí': r.module === 'Thi công cây hoa' ? r.location : r.stage,
+      'Sản phẩm/Cây': r.module === 'Thi công cây hoa' ? r.treeType : (r.productType || '-'),
+      'Số lượng': r.module === 'Thi công cây hoa' ? r.treeQuantity : (r.quantity || '-'),
+      'Số công': r.module === 'Thi công cây hoa' ? r.manDays : '-',
       'Tiến độ': r.progress ? `${r.progress}%` : '-',
       'Trạng thái': r.status,
       'Ghi chú': r.notes || '-'
@@ -166,7 +178,7 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
           {settings?.areas?.map((a: string) => <option key={a} value={a}>{a}</option>)}
         </select>
 
-        {filterModule !== 'Cảnh quan' && (
+        {filterModule !== 'Thi công cây hoa' && (
           <>
             <select 
               value={filterFestival}
@@ -236,7 +248,7 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 ${report.module === 'Cảnh quan' ? 'bg-emerald-100 text-emerald-600' : 'bg-primary/10 text-primary'} rounded-full flex items-center justify-center font-bold text-xs`}>
+                      <div className={`w-8 h-8 ${report.module === 'Thi công cây hoa' ? 'bg-emerald-100 text-emerald-600' : 'bg-primary/10 text-primary'} rounded-full flex items-center justify-center font-bold text-xs`}>
                         {report.reporter.charAt(0).toUpperCase()}
                       </div>
                       <span className="text-sm font-bold text-slate-800">{report.reporter}</span>
@@ -244,15 +256,15 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-semibold text-slate-700">{report.area}</div>
-                    <div className={`text-[10px] font-bold uppercase tracking-wider ${report.module === 'Cảnh quan' ? 'text-emerald-500' : 'text-slate-400'}`}>
-                      {report.module === 'Cảnh quan' ? 'Cảnh quan' : (report.festival || report.workType)}
+                    <div className={`text-[10px] font-bold uppercase tracking-wider ${report.module === 'Thi công cây hoa' ? 'text-emerald-500' : 'text-slate-400'}`}>
+                      {report.module === 'Thi công cây hoa' ? 'Thi công cây hoa' : (report.festival || report.workType)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                    {report.module === 'Cảnh quan' ? report.location : report.stage}
+                    {report.module === 'Thi công cây hoa' ? report.location : report.stage}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {report.module === 'Cảnh quan' ? (
+                    {report.module === 'Thi công cây hoa' ? (
                       <div className="space-y-1">
                         <div className="text-sm font-bold text-emerald-600">{report.treeQuantity} cây</div>
                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{report.manDays} công</div>
@@ -335,7 +347,7 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
               {/* Modal Header */}
               <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 ${selectedReport.module === 'Cảnh quan' ? 'bg-emerald-600' : 'bg-primary'} text-white rounded-2xl flex items-center justify-center font-bold text-xl`}>
+                  <div className={`w-12 h-12 ${selectedReport.module === 'Thi công cây hoa' ? 'bg-emerald-600' : 'bg-primary'} text-white rounded-2xl flex items-center justify-center font-bold text-xl`}>
                     {selectedReport.reporter.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -357,8 +369,8 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Module</p>
-                    <div className={`flex items-center gap-2 font-bold ${selectedReport.module === 'Cảnh quan' ? 'text-emerald-600' : 'text-primary'}`}>
-                      {selectedReport.module === 'Cảnh quan' ? <Sprout size={16} /> : <Activity size={16} />}
+                    <div className={`flex items-center gap-2 font-bold ${selectedReport.module === 'Thi công cây hoa' ? 'text-emerald-600' : 'text-primary'}`}>
+                      {selectedReport.module === 'Thi công cây hoa' ? <Sprout size={16} /> : <Activity size={16} />}
                       {selectedReport.module || 'Lễ hội'}
                     </div>
                   </div>
@@ -370,7 +382,7 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
                     </div>
                   </div>
                   
-                  {selectedReport.module === 'Cảnh quan' ? (
+                  {selectedReport.module === 'Thi công cây hoa' ? (
                     <>
                       <div className="space-y-1">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vị trí thi công</p>
@@ -440,7 +452,7 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
                 </div>
 
                 {/* Landscape Specific Details */}
-                {selectedReport.module === 'Cảnh quan' && (
+                {selectedReport.module === 'Thi công cây hoa' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-slate-100">
                     <div className="space-y-4">
                       <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
@@ -489,7 +501,7 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
 
                 {/* Progress & Status */}
                 <div className="bg-slate-50 rounded-3xl p-6 flex flex-wrap items-center gap-8">
-                  {selectedReport.module !== 'Cảnh quan' && selectedReport.stage !== 'Gia công sản phẩm' && (
+                  {selectedReport.module !== 'Thi công cây hoa' && selectedReport.stage !== 'Gia công sản phẩm' && (
                     <div className="flex-1 min-w-[200px] space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-bold text-slate-600">Tiến độ thi công</span>
@@ -531,84 +543,30 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
                 )}
 
                 {/* Photos */}
-                {selectedReport.module === 'Cảnh quan' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Before Photos */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                        <ImageIcon size={18} className="text-amber-500" />
-                        Ảnh trước khi thay ({selectedReport.beforePhotos?.length || 0})
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        {selectedReport.beforePhotos?.map((photo, i) => (
-                          <motion.div 
-                            key={i}
-                            whileHover={{ scale: 1.02 }}
-                            className="aspect-square rounded-2xl overflow-hidden border border-slate-200 shadow-sm cursor-zoom-in"
-                            onClick={() => window.open(photo, '_blank')}
-                          >
-                            <img src={photo} alt={`Before ${i}`} className="w-full h-full object-cover" />
-                          </motion.div>
-                        ))}
-                        {(!selectedReport.beforePhotos || selectedReport.beforePhotos.length === 0) && (
-                          <div className="col-span-full py-8 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
-                            <p className="text-xs italic">Không có ảnh trước</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* After Photos */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                        <ImageIcon size={18} className="text-emerald-500" />
-                        Ảnh sau khi thay ({selectedReport.afterPhotos?.length || 0})
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        {selectedReport.afterPhotos?.map((photo, i) => (
-                          <motion.div 
-                            key={i}
-                            whileHover={{ scale: 1.02 }}
-                            className="aspect-square rounded-2xl overflow-hidden border border-slate-200 shadow-sm cursor-zoom-in"
-                            onClick={() => window.open(photo, '_blank')}
-                          >
-                            <img src={photo} alt={`After ${i}`} className="w-full h-full object-cover" />
-                          </motion.div>
-                        ))}
-                        {(!selectedReport.afterPhotos || selectedReport.afterPhotos.length === 0) && (
-                          <div className="col-span-full py-8 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
-                            <p className="text-xs italic">Không có ảnh sau</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                    <ImageIcon size={18} className="text-slate-400" />
+                    Hình ảnh hiện trường ({selectedReport.photos?.length || 0})
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                      <ImageIcon size={18} className="text-slate-400" />
-                      Hình ảnh hiện trường ({selectedReport.photos?.length || 0})
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                      {selectedReport.photos?.map((photo, i) => (
-                        <motion.div 
-                          key={i}
-                          whileHover={{ scale: 1.02 }}
-                          className="aspect-square rounded-2xl overflow-hidden border border-slate-200 shadow-sm cursor-zoom-in"
-                          onClick={() => window.open(photo, '_blank')}
-                        >
-                          <img src={photo} alt={`Field ${i}`} className="w-full h-full object-cover" />
-                        </motion.div>
-                      ))}
-                      {(!selectedReport.photos || selectedReport.photos.length === 0) && (
-                        <div className="col-span-full py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
-                          <ImageIcon size={40} className="mb-2 opacity-20" />
-                          <p className="text-sm">Không có hình ảnh đính kèm</p>
-                        </div>
-                      )}
-                    </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {selectedReport.photos?.map((photo, i) => (
+                      <motion.div 
+                        key={i}
+                        whileHover={{ scale: 1.02 }}
+                        className="aspect-square rounded-2xl overflow-hidden border border-slate-200 shadow-sm cursor-zoom-in"
+                        onClick={() => window.open(photo, '_blank')}
+                      >
+                        <img src={photo} alt={`Field ${i}`} className="w-full h-full object-cover" />
+                      </motion.div>
+                    ))}
+                    {(!selectedReport.photos || selectedReport.photos.length === 0) && (
+                      <div className="col-span-full py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
+                        <ImageIcon size={40} className="mb-2 opacity-20" />
+                        <p className="text-sm">Không có hình ảnh đính kèm</p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Modal Footer */}
@@ -624,7 +582,7 @@ export default function ReportTable({ onEdit, activeModule }: ReportTableProps) 
                     handleEditClick(e, selectedReport);
                     setSelectedReport(null);
                   }}
-                  className={`px-8 py-3 ${selectedReport.module === 'Cảnh quan' ? 'bg-emerald-600 shadow-emerald-600/20' : 'bg-primary shadow-primary/20'} text-white rounded-2xl font-bold hover:opacity-90 transition-all shadow-lg flex items-center gap-2`}
+                  className={`px-8 py-3 ${selectedReport.module === 'Thi công cây hoa' ? 'bg-emerald-600 shadow-emerald-600/20' : 'bg-primary shadow-primary/20'} text-white rounded-2xl font-bold hover:opacity-90 transition-all shadow-lg flex items-center gap-2`}
                 >
                   <Edit2 size={18} />
                   Chỉnh sửa báo cáo

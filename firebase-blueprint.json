@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "Report": {
+      "title": "Report",
+      "description": "Construction and maintenance reports",
+      "type": "object",
+      "properties": {
+        "module": { "type": "string", "description": "Module type (Lễ hội, Thi công cây hoa, Bảo dưỡng, Nhân sự)" },
+        "reportDate": { "type": "string", "format": "date", "description": "Date of the report" },
+        "reporter": { "type": "string", "description": "Name of the reporter" },
+        "workType": { "type": "string" },
+        "festival": { "type": "string" },
+        "area": { "type": "string" },
+        "stage": { "type": "string" },
+        "productType": { "type": "string" },
+        "quantity": { "type": "number" },
+        "status": { "type": "string" },
+        "progress": { "type": "number" },
+        "notes": { "type": "string" },
+        "photos": { "type": "array", "items": { "type": "string" } },
+        "beforePhotos": { "type": "array", "items": { "type": "string" } },
+        "afterPhotos": { "type": "array", "items": { "type": "string" } },
+        "constructionTeam": { "type": "string" },
+        "shift": { "type": "string" },
+        "location": { "type": "string" },
+        "landZone": { "type": "string" },
+        "treeType": { "type": "string" },
+        "treeSource": { "type": "string" },
+        "treeClassification": { "type": "string" },
+        "treeQuantity": { "type": "number" },
+        "constructionHours": { "type": "number" },
+        "workerCount": { "type": "number" },
+        "manDays": { "type": "number" },
+        "maintenanceType": { "type": "string" },
+        "customMaintenanceType": { "type": "string" },
+        "plantCategory": { "type": "string" },
+        "unitType": { "type": "string" },
+        "customUnitType": { "type": "string" },
+        "plantStatus": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["module", "reportDate", "reporter", "area"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "HR Employee records",
+      "type": "object",
+      "properties": {
+        "employeeCode": { "type": "string" },
+        "citizenId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "employeeType": { "type": "string" },
+        "gender": { "type": "string" },
+        "dateOfBirth": { "type": "string", "format": "date" },
+        "joinDate": { "type": "string", "format": "date" },
+        "workStatus": { "type": "string" },
+        "staffLevel": { "type": "string" },
+        "teamGroup": { "type": "string" },
+        "address": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "profileImageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["employeeCode", "citizenId", "fullName", "employeeType", "gender", "dateOfBirth", "joinDate", "workStatus", "teamGroup", "address"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Application configuration settings",
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "value": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["key", "value"]
+    }
+  },
+  "firestore": {
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Collection of all reports"
+    },
+    "/employees/{employeeId}": {
+      "schema": "Employee",
+      "description": "Collection of employee records"
+    },
+    "/settings/{settingId}": {
+      "schema": "Setting",
+      "description": "Collection of configuration settings"
+    }
+  }
+}

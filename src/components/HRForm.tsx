@@ -36,6 +36,7 @@ export default function HRForm({ editingEmployee, onSuccess, onError }: HRFormPr
     staffLevel: 'Nhân viên',
     teamGroup: 'Thi công',
     address: '',
+    phoneNumber: '',
     profileImageUrl: ''
   });
 
@@ -96,8 +97,34 @@ export default function HRForm({ editingEmployee, onSuccess, onError }: HRFormPr
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, profileImageUrl: reader.result as string });
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 300;
+          const MAX_HEIGHT = 400;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          setFormData({ ...formData, profileImageUrl: dataUrl });
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -168,6 +195,16 @@ export default function HRForm({ editingEmployee, onSuccess, onError }: HRFormPr
                   onChange={e => setFormData({...formData, citizenId: e.target.value})}
                   className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
                   placeholder="Nhập số CCCD..."
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Số điện thoại</label>
+                <input 
+                  type="tel" 
+                  value={formData.phoneNumber}
+                  onChange={e => setFormData({...formData, phoneNumber: e.target.value})}
+                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
+                  placeholder="Nhập số điện thoại..."
                 />
               </div>
               <div>

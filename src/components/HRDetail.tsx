@@ -20,7 +20,7 @@ interface HRDetailProps {
   employee: Employee;
   onClose: () => void;
   onEdit: (employee: Employee) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 export default function HRDetail({ employee, onClose, onEdit, onDelete }: HRDetailProps) {
@@ -199,9 +199,15 @@ export default function HRDetail({ employee, onClose, onEdit, onDelete }: HRDeta
                     <MapPin size={16} />
                     <span>Liên hệ</span>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Địa chỉ thường trú</p>
-                    <p className="text-sm font-medium text-slate-600 leading-relaxed">{employee.address}</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Số điện thoại</p>
+                      <p className="text-sm font-bold text-slate-700">{employee.phoneNumber || 'Chưa cập nhật'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Địa chỉ thường trú</p>
+                      <p className="text-sm font-medium text-slate-600 leading-relaxed">{employee.address}</p>
+                    </div>
                   </div>
                 </div>
               </div>

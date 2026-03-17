@@ -138,9 +138,9 @@ export default function Settings({ onToast, activeModule }: SettingsProps) {
     { key: 'teamGroups', label: 'Đội / Nhóm', icon: '👥' },
   ];
 
-  const settingGroups = activeModule === 'Nhân sự' ? hrGroups : (activeModule === 'Lễ hội' ? festivalGroups : (activeModule === 'Cảnh quan' ? landscapeGroups : maintenanceGroups));
-  const themeColor = activeModule === 'Nhân sự' ? 'bg-blue-100 text-blue-600' : (activeModule === 'Lễ hội' ? 'bg-primary/10 text-primary' : (activeModule === 'Cảnh quan' ? 'bg-emerald-100 text-emerald-600' : 'bg-green-100 text-green-600'));
-  const accentColor = activeModule === 'Nhân sự' ? 'bg-blue-600' : (activeModule === 'Lễ hội' ? 'bg-primary' : (activeModule === 'Cảnh quan' ? 'bg-emerald-600' : 'bg-green-600'));
+  const settingGroups = activeModule === 'Nhân sự' ? hrGroups : (activeModule === 'Lễ hội' ? festivalGroups : (activeModule === 'Thi công cây hoa' ? landscapeGroups : maintenanceGroups));
+  const themeColor = activeModule === 'Nhân sự' ? 'bg-blue-100 text-blue-600' : (activeModule === 'Lễ hội' ? 'bg-primary/10 text-primary' : (activeModule === 'Thi công cây hoa' ? 'bg-emerald-100 text-emerald-600' : 'bg-green-100 text-green-600'));
+  const accentColor = activeModule === 'Nhân sự' ? 'bg-blue-600' : (activeModule === 'Lễ hội' ? 'bg-primary' : (activeModule === 'Thi công cây hoa' ? 'bg-emerald-600' : 'bg-green-600'));
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12">
@@ -152,14 +152,14 @@ export default function Settings({ onToast, activeModule }: SettingsProps) {
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-800">
-                Cấu hình {activeModule === 'Lễ hội' ? 'Lễ hội' : (activeModule === 'Cảnh quan' ? 'Cảnh quan' : 'Bảo dưỡng')}
+                Cấu hình {activeModule === 'Lễ hội' ? 'Lễ hội' : (activeModule === 'Thi công cây hoa' ? 'Thi công cây hoa' : 'Bảo dưỡng')}
               </h3>
               <p className="text-sm text-slate-500">Tùy chỉnh các danh mục trong form báo cáo</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-              activeModule === 'Lễ hội' ? 'bg-blue-100 text-blue-600' : (activeModule === 'Cảnh quan' ? 'bg-emerald-100 text-emerald-600' : 'bg-green-100 text-green-600')
+              activeModule === 'Lễ hội' ? 'bg-blue-100 text-blue-600' : (activeModule === 'Thi công cây hoa' ? 'bg-emerald-100 text-emerald-600' : 'bg-green-100 text-green-600')
             }`}>
               {activeModule === 'Bảo dưỡng' ? 'Chăm Sóc – Bảo Dưỡng' : activeModule}
             </div>

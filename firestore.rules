@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: reports
+    // Fields: module, reportDate, reporter, workType, festival, area, stage, 
+    //         productType, quantity, status, progress, notes, photos, 
+    //         beforePhotos, afterPhotos, constructionTeam, shift, location, 
+    //         landZone, treeType, treeSource, treeClassification, treeQuantity, 
+    //         constructionHours, workerCount, manDays, maintenanceType, 
+    //         customMaintenanceType, plantCategory, unitType, customUnitType, 
+    //         plantStatus, createdAt, updatedAt
+    //
+    // Collection: employees
+    // Fields: employeeCode, citizenId, fullName, employeeType, gender, 
+    //         dateOfBirth, joinDate, workStatus, staffLevel, teamGroup, 
+    //         address, phoneNumber, profileImageUrl, createdAt, updatedAt
+    //
+    // Collection: settings
+    // Fields: key, value
+    //
+    // Collection: logs
+    // Fields: action, module, user, timestamp, details
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "phandinhtinqlr@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    function isValidString(val, min, max) {
+      return val is string && val.size() >= min && val.size() <= max;
+    }
+
+    function isValidNumber(val, min, max) {
+      return val is number && val >= min && val <= max;
+    }
+
+    function isValidList(val, maxSize) {
+      return val is list && val.size() <= maxSize;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidReport(data) {
+      return data.keys().hasAll(['module', 'reportDate', 'reporter', 'area']) &&
+             data.module is string &&
+             data.reportDate is string &&
+             data.reporter is string &&
+             data.area is string;
+    }
+
+    function isValidEmployee(data) {
+      return data.keys().hasAll(['employeeCode', 'citizenId', 'fullName', 'employeeType', 'gender', 'dateOfBirth', 'joinDate', 'workStatus', 'teamGroup', 'address']) &&
+             isValidString(data.employeeCode, 1, 50) &&
+             isValidString(data.citizenId, 1, 20) &&
+             isValidString(data.fullName, 1, 100) &&
+             data.employeeType is string &&
+             data.gender is string &&
+             data.dateOfBirth is string &&
+             data.joinDate is string &&
+             data.workStatus is string &&
+             data.teamGroup is string &&
+             isValidString(data.address, 1, 500);
+    }
+
+    function isValidSetting(data) {
+      return data.keys().hasAll(['key', 'value']) &&
+             data.key is string &&
+             data.value is list;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /reports/{reportId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidReport(request.resource.data);
+      allow update: if isAuthenticated() && isValidReport(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /employees/{employeeId} {
+      // PII Protection: Only authenticated users can read employee data for now.
+      // In a real app, we might split public/private info.
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidEmployee(request.resource.data);
+      allow update: if isAuthenticated() && isValidEmployee(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /logs/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+    }
+  }
+}

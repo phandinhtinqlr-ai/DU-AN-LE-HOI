@@ -47,6 +47,7 @@ db.exec(`
     staffLevel TEXT,
     teamGroup TEXT,
     address TEXT,
+    phoneNumber TEXT,
     profileImageUrl TEXT,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -79,7 +80,8 @@ const columnsToEnsure = [
   { name: 'plantCategory', type: 'TEXT' },
   { name: 'unitType', type: 'TEXT' },
   { name: 'customUnitType', type: 'TEXT' },
-  { name: 'plantStatus', type: 'TEXT' }
+  { name: 'plantStatus', type: 'TEXT' },
+  { name: 'phoneNumber', type: 'TEXT' }
 ];
 
 columnsToEnsure.forEach(col => {
@@ -97,7 +99,7 @@ columnsToEnsure.forEach(col => {
 const defaultSettings = [
   { key: 'festivals', value: JSON.stringify(['Mùa Xuân', 'Ẩm Thực và Bia', 'Mùa Thu', 'Mùa Đông']) },
   { key: 'areas', value: JSON.stringify(['Mặt Trời', 'Mặt Trăng', 'Diệu Kỳ', 'Nguồn Cội']) },
-  { key: 'stages', value: JSON.stringify(['Khảo sát', 'Lên ý tưởng thiết kế', 'Gia công sản phẩm', 'Thi công cảnh quan', 'Bàn giao']) },
+  { key: 'stages', value: JSON.stringify(['Khảo sát', 'Lên ý tưởng thiết kế', 'Gia công sản phẩm', 'Thi công cây hoa', 'Bàn giao']) } ,
   { key: 'products', value: JSON.stringify(['Cây xi măng', 'Khung khối tròn', 'Tượng chú tiểu', 'Chậu', 'Chuồng chim gỗ', 'Chuồng chim sắt', 'Mô hình sóc', 'Mô hình chim']) },
   { key: 'productStatuses', value: JSON.stringify(['Đang gia công', 'Hoàn thành', 'Đã bàn giao']) },
   { key: 'workStatuses', value: JSON.stringify(['Đang thực hiện', 'Chậm tiến độ', 'Hoàn thành']) },
@@ -115,7 +117,7 @@ const defaultSettings = [
   { key: 'plantStatuses', value: JSON.stringify(['Tốt', 'Cần theo dõi', 'Cây yếu', 'Cây chết', 'Sâu bệnh']) },
   
   // HR specific settings
-  { key: 'staffLevels', value: JSON.stringify(['Nhân viên', 'Tổ phó', 'Tổ trưởng', 'Giám sát', 'Chuyên viên', 'Khác']) },
+  { key: 'staffLevels', value: JSON.stringify(['Trưởng phòng', 'Giám sát', 'Chuyên viên', 'Kiến trúc sư', 'Nhân viên kỹ thuật', 'Nhân viên', 'Công nhật']) },
   { key: 'teamGroups', value: JSON.stringify(['Văn phòng', 'Sản xuất', 'Thi công', 'Chăm sóc bảo dưỡng', 'Chuyên môn']) }
 ];
 
@@ -168,7 +170,7 @@ app.get("/api/employees", (req, res) => {
 app.post("/api/employees", (req, res) => {
   const { 
     employeeCode, citizenId, fullName, employeeType, gender, dateOfBirth, 
-    joinDate, workStatus, staffLevel, teamGroup, address, profileImageUrl 
+    joinDate, workStatus, staffLevel, teamGroup, address, phoneNumber, profileImageUrl 
   } = req.body;
   
   try {
@@ -182,12 +184,12 @@ app.post("/api/employees", (req, res) => {
     const info = db.prepare(`
       INSERT INTO employees (
         employeeCode, citizenId, fullName, employeeType, gender, dateOfBirth, 
-        joinDate, workStatus, staffLevel, teamGroup, address, profileImageUrl
+        joinDate, workStatus, staffLevel, teamGroup, address, phoneNumber, profileImageUrl
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       employeeCode, citizenId, fullName, employeeType, gender, dateOfBirth, 
-      joinDate, workStatus, staffLevel, teamGroup, address, profileImageUrl
+      joinDate, workStatus, staffLevel, teamGroup, address, phoneNumber, profileImageUrl
     );
     
     const newEmployee = { id: info.lastInsertRowid, ...req.body };
@@ -204,7 +206,7 @@ app.put("/api/employees/:id", (req, res) => {
   const { id } = req.params;
   const { 
     employeeCode, citizenId, fullName, employeeType, gender, dateOfBirth, 
-    joinDate, workStatus, staffLevel, teamGroup, address, profileImageUrl 
+    joinDate, workStatus, staffLevel, teamGroup, address, phoneNumber, profileImageUrl 
   } = req.body;
 
   try {
@@ -219,12 +221,12 @@ app.put("/api/employees/:id", (req, res) => {
       UPDATE employees SET 
         employeeCode = ?, citizenId = ?, fullName = ?, employeeType = ?, 
         gender = ?, dateOfBirth = ?, joinDate = ?, workStatus = ?, 
-        staffLevel = ?, teamGroup = ?, address = ?, profileImageUrl = ?,
+        staffLevel = ?, teamGroup = ?, address = ?, phoneNumber = ?, profileImageUrl = ?,
         updatedAt = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
       employeeCode, citizenId, fullName, employeeType, gender, dateOfBirth, 
-      joinDate, workStatus, staffLevel, teamGroup, address, profileImageUrl,
+      joinDate, workStatus, staffLevel, teamGroup, address, phoneNumber, profileImageUrl,
       id
     );
     
@@ -373,7 +375,7 @@ app.get("/api/stats", (req, res) => {
       SUM(constructionHours) as totalHours,
       SUM(workerCount) as totalWorkers
     FROM reports
-    WHERE module = 'Cảnh quan'
+    WHERE module = 'Thi công cây hoa'
   `).get() as any;
 
   // Maintenance Stats

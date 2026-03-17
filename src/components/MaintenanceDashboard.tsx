@@ -17,7 +17,11 @@ import { DashboardStats, Report } from '../types';
 
 const COLORS = ['#4CAF50', '#81C784', '#2E7D32', '#A5D6A7', '#66BB6A', '#43A047', '#1B5E20', '#8BC34A', '#CDDC39'];
 
-export default function MaintenanceDashboard() {
+interface MaintenanceDashboardProps {
+  onNavigate: (tab: string, filters?: any) => void;
+}
+
+export default function MaintenanceDashboard({ onNavigate }: MaintenanceDashboardProps) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,7 +131,7 @@ export default function MaintenanceDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {maintenanceStatCards.map((stat, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4">
+          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Bảo dưỡng' })}>
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${stat.color}`}>
               <stat.icon size={24} />
             </div>
@@ -141,7 +145,7 @@ export default function MaintenanceDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Chart 1: Loại công việc */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Bảo dưỡng' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Theo loại công việc chăm sóc</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -157,7 +161,7 @@ export default function MaintenanceDashboard() {
         </div>
 
         {/* Chart 2: Phân loại cây */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Bảo dưỡng' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Theo phân loại cây</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -173,7 +177,7 @@ export default function MaintenanceDashboard() {
         </div>
 
         {/* Chart 3: Theo 4 vùng đất */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Bảo dưỡng' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Theo 4 vùng đất</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -189,7 +193,7 @@ export default function MaintenanceDashboard() {
         </div>
 
         {/* Chart 4: Theo khu vực */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Bảo dưỡng' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Theo khu vực</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -205,7 +209,7 @@ export default function MaintenanceDashboard() {
         </div>
 
         {/* Chart 5: Tình trạng cây */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Bảo dưỡng' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Theo tình trạng cây / cảnh quan</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -221,7 +225,7 @@ export default function MaintenanceDashboard() {
         </div>
 
         {/* Chart 6: Số công theo ngày */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow" onClick={() => onNavigate('reports', { filterModule: 'Bảo dưỡng' })}>
           <h3 className="text-lg font-bold text-slate-800 mb-8">Số công theo ngày</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
